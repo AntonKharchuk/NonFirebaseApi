@@ -1,7 +1,8 @@
 ﻿using NonFirebaseApi.Clients;
+using NonFirebaseApi.Models;
 using System;
 using System.Net.Http;
-using System.Net.Http.Headers;
+
 using System.Threading.Tasks;
 
 public class HttpRequestSender: IHttpRequestSender
