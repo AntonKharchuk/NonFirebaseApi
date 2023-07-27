@@ -36,8 +36,12 @@ namespace NonFirebaseApi.Controllers
             {
                 try
                 {
-                    await SaveTockenToTxt(body.Token);
+                    var addedNewToken = await SaveTockenToTxt(body.Token);
+                    if (addedNewToken)
                     return Ok("Token has been added to List");
+                    else
+                        return Ok("Token is allready in the List");
+
                 }
                 catch (Exception e)
                 {
