@@ -123,13 +123,37 @@ namespace NonFirebaseApi.Controllers
             return response;
         }
 
-        private async Task SaveTockenToTxt(string token)
+        private async Task<bool> SaveTockenToTxt(string token)
         {
-            using (StreamWriter sw = new StreamWriter(_messageTokenListPath, true))
+            List<string> tokenList;
+            using (StreamReader sr = new StreamReader(_messageTokenListPath))
             {
+                var content = await sr.ReadToEndAsync();
+                if (string.IsNullOrEmpty(content))
+        {
+                    tokenList = new List<string>();
+                }
+                else
+            {
+                    tokenList = JsonConvert.DeserializeObject<List<string>>(content);
+                }
+            }
                 token = token.Replace("\n", " ").Replace("\t", " ");
                 token = token.Trim();
-                await sw.WriteLineAsync(token);
+
+            if (tokenList.Contains(token))
+            {
+                return false;
+            }
+
+            using (StreamWriter sw = new StreamWriter(_messageTokenListPath))
+            {
+                
+                tokenList.Add(token);
+                var json = JsonConvert.SerializeObject(tokenList);
+
+                await sw.WriteAsync(json);
+                return true;
             }
         }
 
