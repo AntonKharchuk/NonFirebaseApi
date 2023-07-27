@@ -19,7 +19,7 @@ namespace NonFirebaseApi.Controllers
         {
             _requestSender = httpRequestSender;
             _messageTokenListPath = "D:\\Code\\C#\\ynik\\NonFirebaseApi\\NonFirebaseApi\\MessageTokenList.txt";
-            _allMessagesListPath = "";
+            _allMessagesListPath = "D:\\Code\\C#\\ynik\\NonFirebaseApi\\NonFirebaseApi\\AllMessages.txt";
         }
         [HttpGet("")]
         public async Task<IActionResult> Index()
