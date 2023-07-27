@@ -19,6 +19,11 @@ namespace NonFirebaseApi.Controllers
             _requestSender = httpRequestSender;
             _messageTokenListPath = "D:\\Code\\C#\\ynik\\NonFirebaseApi\\NonFirebaseApi\\MessageTokenList.txt";
         }
+        [HttpGet("")]
+        public async Task<IActionResult> Index()
+        {
+            return Ok("Well come to API");
+        }
 
 
         [HttpPost("set-message-token")]
