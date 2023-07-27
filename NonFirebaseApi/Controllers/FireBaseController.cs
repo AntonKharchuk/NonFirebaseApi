@@ -120,6 +120,9 @@ namespace NonFirebaseApi.Controllers
             // Send the request with headers and body
             var response = await _requestSender.SendRequest("https://fcm.googleapis.com/fcm/send", "POST", jsonString, customHeaders);
 
+
+            var content = await response.Content.ReadAsStringAsync();   
+
             return response;
         }
 
