@@ -27,6 +27,16 @@ namespace NonFirebaseApi.Controllers
             return Ok("Well come to API");
         }
 
+        [HttpGet("all-messages")]
+        public async Task<IActionResult> GetAllMessages()
+        {
+            using (StreamReader sr = new StreamReader(_allMessagesListPath))
+            {
+                var content = await sr.ReadToEndAsync();
+                return Ok(content);
+            }
+        }
+
 
         [HttpPost("set-message-token")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -87,6 +97,7 @@ namespace NonFirebaseApi.Controllers
                             {
                                var response = await SendMessageToSever(message.Text, token);
                             }
+                            _ = await SaveMessageToTxt(message.Text);
                             return StatusCode(200, "Messages sended");
                         }
                     }
@@ -179,7 +190,7 @@ namespace NonFirebaseApi.Controllers
         private async Task<bool> SaveMessageToTxt(string message)
         {
             List<string> messageList;
-            using (StreamReader sr = new StreamReader(_messageTokenListPath))
+            using (StreamReader sr = new StreamReader(_allMessagesListPath))
             {
                 var content = await sr.ReadToEndAsync();
                 if (string.IsNullOrEmpty(content))
@@ -194,14 +205,8 @@ namespace NonFirebaseApi.Controllers
             message = message.Replace("\n", " ").Replace("\t", " ");
             message = message.Trim();
 
-            if (messageList.Contains(message))
+            using (StreamWriter sw = new StreamWriter(_allMessagesListPath))
             {
-                return false;
-            }
-
-            using (StreamWriter sw = new StreamWriter(_messageTokenListPath))
-            {
-
                 messageList.Add(message);
                 var json = JsonConvert.SerializeObject(messageList);
 
