@@ -2,6 +2,6 @@
 {
     public class Data
     {
-        public string Foo { get; set; }
+        public string foo { get; set; }
     }
 }

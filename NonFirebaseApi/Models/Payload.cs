@@ -2,10 +2,10 @@
 {
     public class Payload
     {
-        public Notification Notification { get; set; }
-        public bool ContentAvailable { get; set; }
-        public Data Data { get; set; }
-        public string Priority { get; set; }
-        public string To { get; set; }
+        public Notification notification { get; set; }
+        public bool contentAvailable { get; set; }
+        public Data data { get; set; }
+        public string priority { get; set; }
+        public string to { get; set; }
     }
 }
