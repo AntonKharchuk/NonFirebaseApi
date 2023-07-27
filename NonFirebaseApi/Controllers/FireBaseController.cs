@@ -92,26 +92,26 @@ namespace NonFirebaseApi.Controllers
             // Create custom headers
             var customHeaders = new HttpHeaders();
             customHeaders.Add("Content-Type", "application/json");
-            customHeaders.Add("Authorization", "Bearer YOUR_AUTH_TOKEN");
+            customHeaders.Add("Authorization", "key=AAAAQvTfT2U:APA91bHwVMCCZj8NC7hfk5ITNi1CYnT2Au-PVRazTCG4_rHRUt7QWG59lw_zhQl7xtqjOkRpmExwbkI6byC0q82Bet2sq_vvwDGurjpYUaKVulb61mrkVMh0p0vAPryyrg9oN8C3GpKi");
 
             var payload = new Payload
             {
-                Notification = new Notification
+                notification = new Notification
                 {
-                    Title = "I DEMAND YOUR ATTENTION :)" + text,
-                    Subtitle = "Just kidding, but not really",
-                    Text = "Sorry to bother you I meant, please pick an option below..",
-                    ClickAction = "GENERAL",
-                    Badge = "1",
-                    Sound = "default"
+                    title = "I DEMAND YOUR ATTENTION :)" + text,
+                    subtitle = "Just kidding, but not really",
+                    text = "Sorry to bother you I meant, please pick an option below..",
+                    clickAction = "GENERAL",
+                    badge = "1",
+                    sound = "default"
                 },
-                ContentAvailable = true,
-                Data = new Data
+                contentAvailable = true,
+                data = new Data
                 {
-                    Foo = "bar"
+                    foo = "bar"
                 },
-                Priority = "High",
-                To = to
+                priority = "High",
+                to = to
             };//add to from txt
 
             string jsonString = JsonConvert.SerializeObject(payload, Formatting.Indented);
