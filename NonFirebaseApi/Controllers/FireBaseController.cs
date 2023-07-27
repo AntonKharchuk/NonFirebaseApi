@@ -176,6 +176,40 @@ namespace NonFirebaseApi.Controllers
             }
         }
 
+        private async Task<bool> SaveMessageToTxt(string message)
+        {
+            List<string> messageList;
+            using (StreamReader sr = new StreamReader(_messageTokenListPath))
+            {
+                var content = await sr.ReadToEndAsync();
+                if (string.IsNullOrEmpty(content))
+                {
+                    messageList = new List<string>();
+                }
+                else
+                {
+                    messageList = JsonConvert.DeserializeObject<List<string>>(content);
+                }
+            }
+            message = message.Replace("\n", " ").Replace("\t", " ");
+            message = message.Trim();
+
+            if (messageList.Contains(message))
+            {
+                return false;
+            }
+
+            using (StreamWriter sw = new StreamWriter(_messageTokenListPath))
+            {
+
+                messageList.Add(message);
+                var json = JsonConvert.SerializeObject(messageList);
+
+                await sw.WriteAsync(json);
+                return true;
+            }
+        }
+
     }
 
     
