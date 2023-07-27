@@ -11,6 +11,7 @@ namespace NonFirebaseApi.Controllers
     {
 
         private readonly string _messageTokenListPath;
+        private readonly string _allMessagesListPath;
 
         private IHttpRequestSender _requestSender;
 
@@ -18,6 +19,7 @@ namespace NonFirebaseApi.Controllers
         {
             _requestSender = httpRequestSender;
             _messageTokenListPath = "D:\\Code\\C#\\ynik\\NonFirebaseApi\\NonFirebaseApi\\MessageTokenList.txt";
+            _allMessagesListPath = "";
         }
         [HttpGet("")]
         public async Task<IActionResult> Index()
@@ -38,7 +40,7 @@ namespace NonFirebaseApi.Controllers
                 {
                     var addedNewToken = await SaveTockenToTxt(body.Token);
                     if (addedNewToken)
-                    return Ok("Token has been added to List");
+                        return Ok("Token has been added to List");
                     else
                         return Ok("Token is allready in the List");
 
@@ -67,16 +69,26 @@ namespace NonFirebaseApi.Controllers
             {
                 try
                 {
+                    
                     using (StreamReader sr = new StreamReader(_messageTokenListPath))
                     {
-                        string line;
-                        HttpResponseMessage response=new HttpResponseMessage();
-                        while ((line = sr.ReadLine())!=null)
-                        {
-                            response = await SendMessageToSever(message.Text, line);
-                        }
-                        return StatusCode((int)response.StatusCode, response.ReasonPhrase.ToString());
+                        List<string> tokenList;
 
+                        var content = await sr.ReadToEndAsync();
+                        if (string.IsNullOrEmpty(content))
+                        {
+                            return StatusCode(500, "No tokens in List");
+
+                        }
+                        else
+                        {
+                            tokenList = JsonConvert.DeserializeObject<List<string>>(content);
+                            foreach (var token in tokenList)
+                            {
+                               var response = await SendMessageToSever(message.Text, token);
+                            }
+                            return StatusCode(200, "Messages sended");
+                        }
                     }
 
 
@@ -137,16 +149,16 @@ namespace NonFirebaseApi.Controllers
             {
                 var content = await sr.ReadToEndAsync();
                 if (string.IsNullOrEmpty(content))
-        {
+                {
                     tokenList = new List<string>();
                 }
                 else
-            {
+                {
                     tokenList = JsonConvert.DeserializeObject<List<string>>(content);
                 }
             }
-                token = token.Replace("\n", " ").Replace("\t", " ");
-                token = token.Trim();
+            token = token.Replace("\n", " ").Replace("\t", " ");
+            token = token.Trim();
 
             if (tokenList.Contains(token))
             {
