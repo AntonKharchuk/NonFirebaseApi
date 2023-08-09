@@ -4,20 +4,22 @@ using NonFirebaseApi.Models;
 using System.Text.Json;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace NonFirebaseApi.Controllers
 {
     public class FireBaseController : ControllerBase
     {
 
-        private readonly string _messageTokenListPath;
-        private readonly string _allMessagesListPath;
+        private  string _messageTokenListPath;
+        private  string _allMessagesListPath;
 
         private IHttpRequestSender _requestSender;
 
         public FireBaseController(IHttpRequestSender httpRequestSender)
         {
             _requestSender = httpRequestSender;
+            
             _messageTokenListPath = "D:\\Code\\C#\\ynik\\NonFirebaseApi\\NonFirebaseApi\\MessageTokenList.txt";
             _allMessagesListPath = "D:\\Code\\C#\\ynik\\NonFirebaseApi\\NonFirebaseApi\\AllMessages.txt";
         }
@@ -25,6 +27,18 @@ namespace NonFirebaseApi.Controllers
         public async Task<IActionResult> Index()
         {
             return Ok("Well come to API");
+        }
+        [HttpPost("set-messageTokenListPath")]
+        public async Task<IActionResult> MessageTokenListPath([FromBody] string body)
+        {
+            _messageTokenListPath = body;
+            return Ok($"_messageTokenListPath = {body}");
+        }
+        [HttpPost("set-allMessagesListPath")]
+        public async Task<IActionResult> AllMessagesListPath([FromBody] string body)
+        {
+            _allMessagesListPath = body;
+            return Ok($"_allMessagesListPath = {body}");
         }
 
         [HttpGet("all-messages")]
@@ -44,7 +58,7 @@ namespace NonFirebaseApi.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SetMessageToken([FromBody] MessageToken body)
         {
-            if (body != null)
+            if (body.Token != null)
             {
                 try
                 {
@@ -79,28 +93,44 @@ namespace NonFirebaseApi.Controllers
             {
                 try
                 {
-                    
-                    using (StreamReader sr = new StreamReader(_messageTokenListPath))
+                    List<string> tokenList = await GetTokenList();
+
+                    if (tokenList == new List<string> { })
                     {
-                        List<string> tokenList;
+                        return StatusCode(500, "No tokens in List");
+                    }
 
-                        var content = await sr.ReadToEndAsync();
-                        if (string.IsNullOrEmpty(content))
-                        {
-                            return StatusCode(500, "No tokens in List");
+                    List<string> errorList = new List<string> { };
 
-                        }
-                        else
+                    foreach (var token in tokenList)
+                    {
+                        var response = await SendMessageToSever(message.Text, token);
+
+
+                        var responseContent = await response.Content.ReadAsStringAsync();
+
+                        dynamic jsonObject = JsonConvert.DeserializeObject(responseContent);
+                        int failureValue = jsonObject.failure;
+                        if (failureValue == 1)
                         {
-                            tokenList = JsonConvert.DeserializeObject<List<string>>(content);
-                            foreach (var token in tokenList)
-                            {
-                               var response = await SendMessageToSever(message.Text, token);
-                            }
-                            _ = await SaveMessageToTxt(message.Text);
-                            return StatusCode(200, "Messages sended");
+                            errorList.Add(token);
                         }
                     }
+                    if (errorList.Count > 0)
+                    {
+                        foreach (var wrongTocken in errorList)
+                        {
+                            tokenList.Remove(wrongTocken);
+                        }
+                        using (StreamWriter sw = new StreamWriter(_messageTokenListPath))
+                        {
+                            var json = JsonConvert.SerializeObject(tokenList);
+                            await sw.WriteAsync(json);
+                        }
+                    }
+
+                    _ = await SaveMessageToTxt(message.Text);
+                    return StatusCode(200, "Messages sended");
 
 
                 }
@@ -114,6 +144,27 @@ namespace NonFirebaseApi.Controllers
                 return StatusCode(StatusCodes.Status400BadRequest, "Message is missing in body");
             }
         }
+
+
+        
+
+        private async Task<List<string>> GetTokenList()
+        {
+            using (StreamReader sr = new StreamReader(_messageTokenListPath))
+            {
+
+                var content = await sr.ReadToEndAsync();
+                if (string.IsNullOrEmpty(content))
+                {
+                    return new List<string> { };
+                }
+                else
+                {
+                    return JsonConvert.DeserializeObject<List<string>>(content);
+                }
+            }
+        }
+
         private async Task<HttpResponseMessage> SendMessageToSever(string text, string to)
         {
             // Create custom headers
@@ -125,12 +176,13 @@ namespace NonFirebaseApi.Controllers
             {
                 notification = new Notification
                 {
-                    title = "I DEMAND YOUR ATTENTION :)" + text,
+                    title = "Увага!",
                     subtitle = "Just kidding, but not really",
                     text = "Sorry to bother you I meant, please pick an option below..",
                     clickAction = "GENERAL",
                     badge = "1",
-                    sound = "default"
+                    sound = "default",
+                    body = text
                 },
                 contentAvailable = true,
                 data = new Data
@@ -148,8 +200,7 @@ namespace NonFirebaseApi.Controllers
             var response = await _requestSender.SendRequest("https://fcm.googleapis.com/fcm/send", "POST", jsonString, customHeaders);
 
 
-            var content = await response.Content.ReadAsStringAsync();   
-
+            
             return response;
         }
 
@@ -168,6 +219,7 @@ namespace NonFirebaseApi.Controllers
                     tokenList = JsonConvert.DeserializeObject<List<string>>(content);
                 }
             }
+            
             token = token.Replace("\n", " ").Replace("\t", " ");
             token = token.Trim();
 

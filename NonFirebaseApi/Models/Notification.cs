@@ -8,6 +8,7 @@
         public string clickAction { get; set; }
         public string badge { get; set; }
         public string sound { get; set; }
+        public string body { get; set; }
     }
 
 }
